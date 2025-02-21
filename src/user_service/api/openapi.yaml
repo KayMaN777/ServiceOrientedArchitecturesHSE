@@ -1,0 +1,176 @@
+openapi: 3.0.0
+info:
+  title: User Management API
+  version: 1.0.0
+  description: API for managing user profiles, including registration, login, and profile updates.
+
+paths:
+  /register:
+    post:
+      summary: Register a new user
+      description: Create a new user account with provided login credentials and email.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                login:
+                  type: string
+                  description: The username for the new account
+                password:
+                  type: string
+                  format: password
+                  description: The password for the new account
+                email:
+                  type: string
+                  format: email
+                  description: The email address for the new account
+              required:
+                - username
+                - password
+                - email
+      responses:
+        '200':
+          $ref: '#/components/responses/AuthSuccess'
+        '400':
+          description: Field login must be filled
+        '400':
+          description: Field password must be filled
+        '400':
+          description: Invalid email
+        '404':
+          description: Request error, try again later
+        '409':
+          description: Username or email already exists
+
+  /update:
+    put:
+      summary: Update user profile data
+      description: Endpoint for authenticated users to update their profile information.
+      security:
+        - BearerAuth: []
+      requestBody:
+        description: User profile information to update
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                  description: The user's first name
+                lastName:
+                  type: string
+                  description: The user's last name
+                dateOfBirth:
+                  type: string
+                  format: date
+                  description: The user's date of birth in format YYYY-MM-DD
+                email:
+                  type: string
+                  format: email
+                  description: The user's email address
+                phoneNumber:
+                  type: string
+                  description: The user's phone number
+      responses:
+        '200':
+          description: Profile successfully updated
+        '400':
+          description: Incorrect email
+        '400':
+          description: Incorrect phone number
+        '400':
+          description: Incorrect birth date
+        '401':
+          description: Incorrect authentification token
+        '401':
+          description: Authentification token allready expired
+        '404':
+          description: No such user
+
+
+  /login:
+    post:
+      summary: Authenticate a user
+      description: Log in a user with their username and password to receive an auth token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                login:
+                  type: string
+                  description: The user's username
+                password:
+                  type: string
+                  format: password
+                  description: The user's password
+              required:
+                - username
+                - password
+      responses:
+        '200':
+          $ref: '#/components/responses/AuthSuccess'
+        '400':
+          description: Login and Password must be filled in
+        '401':
+          description: Invalid username or password
+
+  /profile:
+    get:
+      summary: Retrieve user profile
+      description: Get the current user's profile data.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  firstName:
+                    type: string
+                  lastName:
+                    type: string
+                  dateOfBirth:
+                    type: string
+                    format: date
+                  email:
+                    type: string
+                    format: email
+                  phoneNumber:
+                    type: string
+        '401':
+          description: Incorrect authentification token
+        '401':
+          description: Authentification token allready expired
+        '404':
+          description: Request error, try again later
+
+components:
+  responses:
+    AuthSuccess:
+      description: Successful authentification
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              token:
+                type: string
+              expireation_date:
+                type: string
+                format: date-time 
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
