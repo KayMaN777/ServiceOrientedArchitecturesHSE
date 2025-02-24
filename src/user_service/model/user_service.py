@@ -23,19 +23,8 @@ class UserService:
     
     @staticmethod
     def validate_birth_date(birth_date: str) -> bool:
-        birth_date_regex = re.compile(
-            r"^(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[0-2])-(\d{4})$"
-        )
-        match = birth_date_regex.match(birth_date)
-        if match:
-            day, month, year = map(int, match.groups())
-            try:
-                import datetime
-                datetime.datetime(year, month, day)
-                return True
-            except ValueError:
-                return False
-        return False
+        pattern = r"^(?:(?:19|20)\d{2})-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$"
+        return re.match(pattern, birth_date) is not None
 
     def register(self, login: str, password: str, email: str) -> tuple[int, dict]:
         if login is None:

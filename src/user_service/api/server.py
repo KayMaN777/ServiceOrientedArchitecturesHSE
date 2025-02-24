@@ -33,7 +33,7 @@ class UserServer:
             data = request.json
             first_name = data.get("firstName")
             last_name = data.get("lastName")
-            birth_date = data.get("dateOfBirth")
+            birth_date = data.get("birthdate")
             email = data.get("email")
             phone_number = data.get("phoneNumber")
             status, response = self.user_service.update(token, first_name, last_name, birth_date, email, phone_number)
