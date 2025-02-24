@@ -1,0 +1,93 @@
+@startuml ER-diagram
+
+title Entity-Relationship diagram
+
+entity User {
+* userId: PrimaryKey, Int
+* username: string
+* email: string, unique
+* passwordHash: string
+* createdAt: TIMESTAMP
+}
+
+entity Profile {
+* userId: PrimaryKey, ForeignKey{User.userId}
+* bio: string
+* birthday: DATE
+* work: string
+* gender: ENUM string {Male/Woman}
+}
+
+entity Session {
+* sessionId: PrimaryKey, Int
+* userId: ForeignKey{User.userId}
+* token: string
+* expiresAt: TIMESTAMP
+* createdAt: TIMESTAMP
+}
+
+entity Post {
+* postId: PrimaryKey, Int
+* userId: ForeignKey{User.userId}
+* commentId: ForeignKey{Comment.commentId}
+* contentId: ForeignKey{Content.contentId}
+}
+
+entity Comment {
+* commentId: Int
+* userId: ForeignKey{User.userId}
+* postId: ForeignKey{Post.postId}
+* sonCommentId: Int
+* contentId: ForeignKey{Content.contentId}
+}
+
+entity Content {
+* contentId: PrimaryKey, Int
+* content: string
+* createdAt: TIMESTAMP
+* updatedAt: TIMESTAMP
+* statisticsId: ForeignKey{}
+}
+
+
+entity PostStatistics {
+* statisticsId: PrimaryKey
+* postId: ForeignKey{Post.postId}
+* commentId: ForeignKey{Comment.commentId}
+* likesCount: Int
+* viewsCount: Int
+* claimsCount: Int
+* updatedAt: TIMESTAMP
+}
+
+entity UserStatistics {
+* userId: PrimaryKey, ForeignKey{User.userId}
+* likesCount: Int
+* viewsCount: Int
+* claimsCount: Int
+* updatedAt: TIMESTAMP
+}
+
+entity Event {
+* eventId: PrimaryKey, Int
+* userId: ForeignKey{User.userId}
+* postId: ForeignKey{Post.postId}
+* commentId: ForeignKey{Comment.commentId}
+* type: ENUM string {like/view/claim}
+* createdAt: TIMESTAMP
+}
+
+
+User -- Profile : "Associated"
+User -- Session : "Associated"
+User -> Event : "Creates"
+User -> Post : "Creates"
+User -> Comment : "Creates"
+Comment -> Post : "Contains"
+Comment -- Content : "Associated"
+Post -- Content : "Associated"
+Content -- PostStatistics : "Associated"
+Event -> PostStatistics : "Updates"
+Event -> UserStatistics : "Updates"
+User -- UserStatistics : "Associated"
+@enduml

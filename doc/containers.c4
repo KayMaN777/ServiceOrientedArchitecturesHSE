@@ -1,0 +1,73 @@
+specification {
+  element person {
+      style {
+          shape person
+          color green
+      }
+  }
+  element softwareSystem
+  element container
+  element component
+}
+
+model {
+  user = person "Пользователь" "Пользователь социальной сети"
+  socialNetwork = softwareSystem "Социальная сеть" {
+    apiGateway = container "Api Gateway" {
+      description "Маршрутизация запросов и управление доступом"
+      technology "Python"
+    }
+    userService = container "User Service" {
+      description "Управление пользователями и аутентификация"
+      technology "Python"
+    }
+    userDb = container "Users Database" {
+      description "Хранение данных пользователей"
+      technology "PostgreSQL"
+      style {
+        shape cylinder
+      }
+    }
+    contentService = container "Content service" {
+      description "Сервис постов и комментариев"
+      technology "Python"
+    }
+    contentDB = container "Content database" {
+      description "Хранение данных о постах и комментариях"
+      technology "PostgreSQL"
+      style {
+        shape cylinder
+      }
+    }
+    statisticsService = container "Statistics service" {
+      description "Сервис сбора и обработки статистики"
+      technology "Python"
+    }
+    statisticsDb = container "Statictics database" {
+      description "Хранение данных о лайках, просмотрах, жалобах"
+      technology  "ClickHouse"
+      style {
+        shape cylinder
+      }
+    }
+    kafka = container "Kafka" {
+      description "Обмен событиями между сервисами"
+      technology "Message Broker"
+      style {
+        shape queue
+      }
+    }
+  }
+user -> socialNetwork.apiGateway "Использует" "HTTPS"
+socialNetwork.apiGateway -> socialNetwork.userService "Маршрутизирует" "JSON/HTTPS"
+socialNetwork.apiGateway -> socialNetwork.contentService "Маршрутизирует" "JSON/HTTPS"
+socialNetwork.apiGateway -> socialNetwork.statisticsService "Маршрутиизрует" "JSON/HTTPS"
+socialNetwork.userService -> socialNetwork.userDb "Пишет/Читает"
+socialNetwork.contentService -> socialNetwork.contentDB "Пишет/Читает"
+socialNetwork.statisticsService -> socialNetwork.statisticsDb "Пишет читает"
+socialNetwork.contentService -> socialNetwork.kafka "Подписывается"
+socialNetwork.statisticsService -> socialNetwork.kafka "Подписывается"
+socialNetwork.userService -> socialNetwork.kafka "Подписывается"
+}
+
+
