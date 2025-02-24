@@ -1,8 +1,9 @@
 import jwt
 import datetime
 import bcrypt
+import os
 
-SECRET_KEY="kayman777"
+SECRET_KEY=os.getenv("SECRET_KEY")
 
 def create_jwt_token(login: str) -> str:
     expiration = datetime.datetime.utcnow() + datetime.timedelta(hours=1)

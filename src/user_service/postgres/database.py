@@ -4,13 +4,14 @@ import jwt
 import psycopg2
 from psycopg2 import sql
 from psycopg2 import pool
+import os
 
 db_params = {
-    "database": "mydatabase",
-    "user": "myuser",
-    "password": "mypassword",
-    "host": "localhost",
-    "port": "5432"
+    "database": os.getenv("USER_DB"),
+    "user": os.getenv("USER_DB_USER"),
+    "password": os.getenv("USER_DB_PASSWORD"),
+    "host": os.getenv("USER_DB_HOST"),
+    "port": os.getenv("USER_DB_PORT")
 }
 
 class Database:
@@ -20,7 +21,6 @@ class Database:
             maxconn=10,             
             **db_params
         )
-        self.users_db = {}
     
     def execute_query(self, query:str, params = None) -> tuple[bool, list]:
         connection = None
@@ -103,16 +103,19 @@ class Database:
         return status, token
 
     def register(self, login: str, password_hash: bytes, email: str) -> tuple[int, dict]:
+        print("PIDARASINA EBANAYA BLYA")
         query = """SELECT * from Users WHERE username = %s OR email = %s"""
         params = (login, email)
         status, result = self.execute_query(query, params)
         if not status:
+            print("PIZDA BLYA")
             return 404, {"message": "Internal error"}
         if result:
             return 409, {"message": "Username or email allready exists"}
         
         status, token = self.register_transaction(login, password_hash, email)
         if not status:
+            print("XEROEBINA BLYA")
             return 404, {"message": "Internal error"}
         
         return 200, {"token": token}
@@ -172,6 +175,14 @@ class Database:
             return 404, {"message": "Internal error"}
         return 200, {"message": "Profile successfully updated"}
 
+    @staticmethod
+    def date_to_string(date):
+        try:
+            result = date.strftime("%Y-%m-%d")
+        except Exception as err:
+            result = date
+        return result
+
     def get_profile(self, token: str) -> tuple[int, dict]:
         status, response = self.validate_token(token)
         if (status != 200):
@@ -187,7 +198,7 @@ class Database:
         print(response)
         response_data = {"firstName": response[0][1],
                          "lastName": response[0][2],
-                         "birthdate": response[0][3].strftime("%Y-%m-%d"),
+                         "birthdate": Database.date_to_string(response[0][3]),
                          "email": response[0][4],
                          "phoneNumber": response[0][5]}
         return 200, response_data

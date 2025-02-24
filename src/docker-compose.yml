@@ -1,15 +1,58 @@
 version: '3.8'
 
 services:
-  db:
+  user_database:
     image: postgres:latest
-    container_name: postgres-db
+    container_name: user_database
     environment:
-      POSTGRES_USER: myuser
-      POSTGRES_PASSWORD: mypassword
-      POSTGRES_DB: mydatabase
+      POSTGRES_USER: ${USER_DB_USER}
+      POSTGRES_PASSWORD: ${USER_DB_PASSWORD}
+      POSTGRES_DB: ${USER_DB}
     volumes:
       - ./user_service/postgres/initdb:/docker-entrypoint-initdb.d
     ports:
-      - "5432:5432"
-   
+      - "${USER_DB_PORT}:5432"
+    networks:
+      - my_network
+  user_service:
+    restart: unless-stopped
+    build:
+      context: ./user_service/
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    command:
+      [
+        "python3",
+        "-u",
+        "main.py"
+      ]
+    container_name: user_service
+    depends_on:
+      - user_database
+    ports:
+      - "${USER_API_PORT}:${USER_API_PORT}"
+    networks:
+      - my_network
+  api_gateway:
+    restart: unless-stopped
+    build:
+      context: ./api_gateway/
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    command:
+      [
+        "python3",
+        "-u",
+        "main.py"
+      ]
+    container_name: api_gateway
+    depends_on:
+      - user_service
+    ports:
+      - "${API_GATEWAY_PORT}:${API_GATEWAY_PORT}"
+    networks:
+      - my_network
+networks:
+  my_network:

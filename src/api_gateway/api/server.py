@@ -1,11 +1,12 @@
 
 from flask import Flask, request, Response
 import requests
+import os
 
 class ApiGatewayServer:
     def __init__(self):
         self.app = Flask(__name__)
-        self.user_service_address = "http://localhost:5001"
+        self.user_service_address = f"http://{os.getenv('USER_API_HOST')}:{os.getenv('USER_API_PORT')}"
         self.setup_routes()
     
     def setup_routes(self):
