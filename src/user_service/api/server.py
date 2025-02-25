@@ -50,6 +50,6 @@ class UserServer:
         return Response(response_json, status=status, content_type='application/json; charset=utf-8')
 
     def run(self, host='0.0.0.0', port=5000):
-        self.app.run(debug=True, host=host, port=port)
+        self.app.run(host=host, port=port)
 
 
