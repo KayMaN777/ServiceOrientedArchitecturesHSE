@@ -41,7 +41,7 @@ paths:
         '400':
           description: Invalid email
         '404':
-          description: Request error, try again later
+          description: Internal error
         '409':
           description: Username or email already exists
 
@@ -90,7 +90,7 @@ paths:
         '401':
           description: Authentification token allready expired
         '404':
-          description: No such user
+          description: Internal error
 
 
   /login:
@@ -121,6 +121,8 @@ paths:
           description: Login and Password must be filled in
         '401':
           description: Invalid username or password
+        '404':
+          description: Internal error
 
   /profile:
     get:
@@ -153,7 +155,7 @@ paths:
         '401':
           description: Authentification token allready expired
         '404':
-          description: Request error, try again later
+          description: Internal error
 
 components:
   responses:
