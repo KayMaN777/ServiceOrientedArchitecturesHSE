@@ -5,6 +5,7 @@ import psycopg2
 from psycopg2 import sql
 from psycopg2 import pool
 import os
+import logging
 
 db_params = {
     "database": os.getenv("USER_DB"),
@@ -21,8 +22,11 @@ class Database:
             maxconn=10,             
             **db_params
         )
+        self.logger = logging.getLogger("user_db_wrapper")
+        self.logger.info("Initialized connection pool")
     
     def execute_query(self, query:str, params = None) -> tuple[bool, list]:
+        self.logger.info("Started query")
         connection = None
         result = None
         status = True
@@ -36,11 +40,13 @@ class Database:
             else:
                 connection.commit()
         except Exception as error:
+            self.logger.error(f"Error while query: {error}")
             status = False
         finally:
             if connection:
                 cursor.close()
                 self.connection_pool.putconn(connection)
+        self.logger.info("Ended query")
         return status, result
 
     def get_user_id(self, login: str) -> str:
@@ -75,6 +81,7 @@ class Database:
         return True
 
     def register_transaction(self, login: str, password_hash: bytes, email: str) -> tuple[bool, str]:
+        self.logger.info("Started transaction")
         connection = None
         status = True
         token = None
@@ -93,11 +100,13 @@ class Database:
                            (user_id, token, datetime.now() + timedelta(hours = 1)))
             connection.commit()
         except Exception as error:
+            self.logger.error(f"Error while transaction: {error}")
             status = False
         finally:
             if connection:
                 cursor.close()
                 self.connection_pool.putconn(connection)
+        self.logger.info("Ended transaction")
         return status, token
 
     def register(self, login: str, password_hash: bytes, email: str) -> tuple[int, dict]:

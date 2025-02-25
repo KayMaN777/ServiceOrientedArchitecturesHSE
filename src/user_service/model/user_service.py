@@ -5,7 +5,6 @@ from security.crypta import hash_password
 class UserService:
     def __init__(self):
         self.database = Database()
-        pass
     
     @staticmethod
     def validate_email(email: str) -> bool:
