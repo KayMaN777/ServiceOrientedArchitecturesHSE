@@ -36,7 +36,6 @@ class Database:
             else:
                 connection.commit()
         except Exception as error:
-            print(f"Error while query: {error}")
             status = False
         finally:
             if connection:
@@ -94,7 +93,6 @@ class Database:
                            (user_id, token, datetime.now() + timedelta(hours = 1)))
             connection.commit()
         except Exception as error:
-            print(f"Error while query: {error}")
             status = False
         finally:
             if connection:
@@ -103,19 +101,16 @@ class Database:
         return status, token
 
     def register(self, login: str, password_hash: bytes, email: str) -> tuple[int, dict]:
-        print("PIDARASINA EBANAYA BLYA")
         query = """SELECT * from Users WHERE username = %s OR email = %s"""
         params = (login, email)
         status, result = self.execute_query(query, params)
         if not status:
-            print("PIZDA BLYA")
             return 404, {"message": "Internal error"}
         if result:
             return 409, {"message": "Username or email allready exists"}
         
         status, token = self.register_transaction(login, password_hash, email)
         if not status:
-            print("XEROEBINA BLYA")
             return 404, {"message": "Internal error"}
         
         return 200, {"token": token}
@@ -162,8 +157,6 @@ class Database:
         for field_name, field_param in zip(["firstName = %s", "lastName = %s", "birthdate = %s", "email = %s", "phoneNumber = %s"],
                                            [first_name, last_name, birth_date, email, phone_number]):
             self.add_field(params, fields, field_name, field_param)
-        print(fields)
-        print(params)
         if not params:
             return 200, {"message": "Profile successfully updated"}
         query += ", ".join(fields)
@@ -195,7 +188,6 @@ class Database:
         status, response = self.execute_query(query, params)
         if not status:
             return 404, {"message": "Internal error"}
-        print(response)
         response_data = {"firstName": response[0][1],
                          "lastName": response[0][2],
                          "birthdate": Database.date_to_string(response[0][3]),
