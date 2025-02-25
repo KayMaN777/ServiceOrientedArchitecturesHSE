@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-from security.crypta import create_jwt_token, decode_jwt_token, check_password
 import jwt
 import psycopg2
 from psycopg2 import sql
@@ -16,12 +15,13 @@ db_params = {
 }
 
 class Database:
-    def __init__(self):
+    def __init__(self, crypta):
         self.connection_pool = psycopg2.pool.SimpleConnectionPool(
             minconn=1,             
             maxconn=10,             
             **db_params
         )
+        self.crypta = crypta
         self.logger = logging.getLogger("user_db_wrapper")
         self.logger.info("Initialized connection pool")
     
@@ -61,7 +61,7 @@ class Database:
         user_id = self.get_user_id(login)
         if user_id is None:
             return False, None
-        token = create_jwt_token(login)
+        token = self.crypta.create_jwt_token(login)
         query = """INSERT INTO Sessions (userId, token, expiresAt) VALUES (%s, %s, %s)"""
         params = (user_id, token, datetime.now() + timedelta(hours = 1))
         status, _ = self.execute_query(query, params)
@@ -95,7 +95,7 @@ class Database:
             user_id = cursor.fetchall()[0][0]
             cursor.execute("""INSERT INTO Profiles (userId, email) VALUES (%s, %s)""",
                            (user_id, email))
-            token = create_jwt_token(login)
+            token = self.crypta.create_jwt_token(login)
             cursor.execute("""INSERT INTO Sessions (userId, token, expiresAt) VALUES (%s, %s, %s)""",
                            (user_id, token, datetime.now() + timedelta(hours = 1)))
             connection.commit()
@@ -130,7 +130,7 @@ class Database:
         status, result = self.execute_query(query, params)
         if not status:
             return 404, {"message": "Internal error"}
-        if not result or not check_password(bytes(result[0][3]), password):
+        if not result or not self.crypta.check_password(bytes(result[0][3]), password):
             return 401, {"message": "Invalid username or password"}
         status, token = self.add_token(login)
         if not status:
@@ -139,7 +139,7 @@ class Database:
 
     def validate_token(self, token: str) -> tuple[int, dict]:
         try:
-            login = decode_jwt_token(token)
+            login = self.crypta.decode_jwt_token(token)
             if not self.check_session(login, token):
                 return 404, {"message": "No such session"}
             return 200, login

@@ -1,12 +1,10 @@
-
 from flask import Flask, request, Response
 import json
-from model.user_service import UserService
 
 class UserServer:
-    def __init__(self):
+    def __init__(self, user_service):
         self.app = Flask(__name__)
-        self.user_service = UserService()
+        self.user_service = user_service
         self.setup_routes()
 
     def setup_routes(self):

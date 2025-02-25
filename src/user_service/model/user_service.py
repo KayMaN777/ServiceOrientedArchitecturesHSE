@@ -1,10 +1,9 @@
-from postgres.database import Database
 import re
-from security.crypta import hash_password
 
 class UserService:
-    def __init__(self):
-        self.database = Database()
+    def __init__(self, database, crypta):
+        self.database = database
+        self.crypta = crypta
     
     @staticmethod
     def validate_email(email: str) -> bool:
@@ -32,7 +31,7 @@ class UserService:
             return 400, {"message": "Field password must be filled"}
         if not UserService.validate_email(email):
             return 400, {"message": "Invalid email"}
-        status, response = self.database.register(login, hash_password(password), email)
+        status, response = self.database.register(login, self.crypta.hash_password(password), email)
         return status, response
 
     def login(self, login: str, password: str) -> tuple[int, dict]:
