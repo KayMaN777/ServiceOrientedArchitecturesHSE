@@ -14,6 +14,11 @@ services:
       - "${USER_DB_PORT}:5432"
     networks:
       - my_network
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
   user_service:
     restart: unless-stopped
     build:
@@ -29,7 +34,8 @@ services:
       ]
     container_name: user_service
     depends_on:
-      - user_database
+      user_database:
+        condition: service_healthy
     ports:
       - "${USER_API_PORT}:${USER_API_PORT}"
     networks:
@@ -52,6 +58,45 @@ services:
       - user_service
     ports:
       - "${API_GATEWAY_PORT}:${API_GATEWAY_PORT}"
+    networks:
+      - my_network
+  content_database:
+    image: postgres:latest
+    container_name: content_database
+    environment:
+      POSTGRES_USER: ${CONTENT_DB_USER}
+      POSTGRES_PASSWORD: ${CONTENT_DB_PASSWORD}
+      POSTGRES_DB: ${CONTENT_DB}
+    volumes:
+      - ./content_service/postgres/initdb:/docker-entrypoint-initdb.d
+    ports:
+      - "${CONTENT_DB_PORT}:5432"
+    networks:
+      - my_network
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  content_service:
+    restart: unless-stopped
+    build:
+      context: ./content_service/
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    command:
+      [
+        "python3",
+        "-u",
+        "main.py"
+      ]
+    container_name: content_service
+    depends_on:
+      content_database:
+        condition: service_healthy
+    ports:
+      - "${CONTENT_API_PORT}:${CONTENT_API_PORT}"
     networks:
       - my_network
 networks:

@@ -1,0 +1,65 @@
+// content_service.proto
+
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+service ContentService {
+  rpc AddPost(AddPostRequest) returns (Post);
+  rpc DeletePost(DeletePostRequest) returns (DeletePostResponse);
+  rpc UpdatePost(UpdatePostRequest) returns (Post);
+  rpc GetPostById(GetPostByIdRequest) returns (Post);
+  rpc GetUserPosts(GetPostsRequest) returns (PostsList);
+  rpc GetAllPosts(GetPostsRequest) returns (PostsList);
+}
+
+message Post {
+  int32 post_id = 1;
+  int32 user_id = 2;
+  google.protobuf.Timestamp created_at = 3;
+  google.protobuf.Timestamp updated_at = 4;
+  bool is_private = 5;
+  repeated string tags = 6;
+  string title = 7;
+  string description = 8;
+}
+
+message AddPostRequest {
+  int32 user_id = 1;
+  string title = 2;
+  string description = 3;
+  repeated string tags = 4;
+  bool is_private = 5;
+}
+
+message DeletePostRequest {
+  int32 post_id = 1;
+}
+
+message DeletePostResponse {
+  bool success = 1;
+}
+
+message UpdatePostRequest {
+  int32 post_id = 1;
+  string title = 2;
+  string description = 3;
+  repeated string tags = 4;
+  bool is_private = 5;
+}
+
+message GetPostByIdRequest {
+  int32 post_id = 1;
+}
+
+message GetPostsRequest {
+  int32 user_id = 1;
+  int32 limit = 2;
+  int32 offset = 3;
+}
+
+message PostsList {
+  repeated Post posts = 1;
+}
+
+

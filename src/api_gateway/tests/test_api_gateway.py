@@ -1,9 +1,8 @@
-
 import unittest
 from unittest.mock import patch
 import json
 from flask import Flask
-from api_gateway.api.server import ApiGatewayServer
+from api.server import ApiGatewayServer
 
 class TestApiGatewayServer(unittest.TestCase):
 

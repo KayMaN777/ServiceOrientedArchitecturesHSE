@@ -35,12 +35,8 @@ paths:
         '200':
           $ref: '#/components/responses/AuthSuccess'
         '400':
-          description: Field login must be filled
-        '400':
-          description: Field password must be filled
-        '400':
-          description: Invalid email
-        '404':
+          description: Bad request
+        '500':
           description: Internal error
         '409':
           description: Username or email already exists
@@ -80,16 +76,10 @@ paths:
         '200':
           description: Profile successfully updated
         '400':
-          description: Incorrect email
-        '400':
-          description: Incorrect phone number
-        '400':
-          description: Incorrect birth date
+          description: Bad Request
         '401':
-          description: Incorrect authentification token
-        '401':
-          description: Authentification token allready expired
-        '404':
+          description: Missing credentials
+        '500':
           description: Internal error
 
 
@@ -121,7 +111,7 @@ paths:
           description: Login and Password must be filled in
         '401':
           description: Invalid username or password
-        '404':
+        '500':
           description: Internal error
 
   /profile:
@@ -151,13 +141,218 @@ paths:
                   phoneNumber:
                     type: string
         '401':
-          description: Incorrect authentification token
-        '401':
-          description: Authentification token allready expired
-        '404':
+          description: Missing credentials
+        '500':
           description: Internal error
-
+  
+  /post:
+    get:
+      summary: Get post by id
+      description: Get post data by post id
+      security:
+        - BearerAuth: []
+      requestBody:
+        description: Post id to get post
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                postId:
+                  type: integer
+                  description: Post id
+      responses:
+        '200':
+          $ref: '#/components/responses/PostDataResponse'
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized access
+        '500':
+          description: Internal Error
+    post:
+      summary: Add post
+      description: Add post
+      security:
+        - BearerAuth: []
+      requestBody:
+        description: Information for post
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: integer
+                title:
+                  type: string
+                description:
+                  type: string
+                tags:
+                  type: array
+                  items: 
+                    type: string
+                isPrivate:
+                  type: boolean
+      responses:
+        '200':
+          $ref: '#/components/responses/PostDataResponse'
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized access
+        '500':
+          description: Internal Error
+    put:
+      summary: Update post
+      description: Update post
+      security:
+        - BearerAuth: []
+      requestBody:
+        description: Information for post
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                postId:
+                  type: integer
+                userId:
+                  type: integer
+                title:
+                  type: string
+                description:
+                  type: string
+                tags:
+                  type: array
+                  items: 
+                    type: string
+                isPrivate:
+                  type: boolean
+      responses:
+        '200':
+          $ref: '#/components/responses/PostDataResponse'
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized access
+        '500':
+          description: Internal Error
+    delete:
+      summary: Delete post
+      description: Delete post with provided post id
+      security:
+        - BearerAuth: []
+      requestBody:
+        description: Post id that need to delete
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                postId:
+                  type: integer
+      responses:
+        '200':
+          description: Profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized access
+        '500':
+          description: Internal Error
+  /posts/all:
+    get:
+      summary: Get posts page
+      description: Get posts page providing limit and offset
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: integer
+                limit:
+                  type: integer
+                offset:
+                  type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/PostDataListResponse'
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized access
+        '500':
+          description: Internal Error
+  /posts/user:
+    get:
+      summary: Get user posts page
+      description: Get user posts page providing limit and offset
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: integer
+                limit:
+                  type: integer
+                offset:
+                  type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/PostDataListResponse'
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized access
+        '500':
+          description: Internal Error
 components:
+  schemas:
+    PostData:
+      type: object
+      properties:
+        postId:
+          type: integer
+        userId:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        isPrivate:
+          type: boolean
+        tags:
+          type: array
+          items: 
+            type: string
+        title:
+          type: string
+        description:
+          type: string
   responses:
     AuthSuccess:
       description: Successful authentification
@@ -168,9 +363,23 @@ components:
             properties:
               token:
                 type: string
-              expireation_date:
+              expiration_date:
                 type: string
                 format: date-time 
+    PostDataResponse:
+      description: Post data
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PostData'
+    PostDataListResponse:
+      description: List of posts
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/PostData'
   securitySchemes:
     BearerAuth:
       type: http
