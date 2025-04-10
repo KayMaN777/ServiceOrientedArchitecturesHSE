@@ -99,5 +99,45 @@ services:
       - "${CONTENT_API_PORT}:${CONTENT_API_PORT}"
     networks:
       - my_network
+  statistics_database:
+    image: clickhouse/clickhouse-server
+    container_name: statistics_database
+    environment:
+      CLICKHOUSE_USER: ${STATISTICS_DB_USER}
+      CLICKHOUSE_PASSWORD: ${STATISTICS_DB_PASSWORD}
+      CLICKHOUSE_DB: ${STATISTICS_DB}
+    volumes:
+      - ./statistics_service/clickhouse/initdb:/docker-entrypoint-initdb.d
+    ports:
+      - "${STATISTICS_DB_PORT}:8123"
+      - "9000:9000"
+    networks:
+      - my_network
+    healthcheck:
+      test: ["CMD-SHELL", "clickhouse-client --user ${STATISTICS_DB_USER} --password ${STATISTICS_DB_PASSWORD} --query='SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  statistics_service:
+    restart: unless-stopped
+    build:
+      context: ./statistics_service/
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    command:
+      [
+        "python3",
+        "-u",
+        "main.py"
+      ]
+    container_name: statistics_service
+    depends_on:
+      content_database:
+        condition: service_healthy
+    ports:
+      - "${STATISTICS_API_PORT}:${STATISTICS_API_PORT}"
+    networks:
+      - my_network
 networks:
   my_network:

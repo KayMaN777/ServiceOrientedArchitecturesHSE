@@ -187,3 +187,46 @@ class Database:
             }
             posts.append(post_info)
         return posts
+
+    def add_comment(self, user_id, post_id, description):
+        timestamp = datetime.utcnow()
+        query = """
+            INSERT INTO Comments (userId, postId, createdAt, updatedAt, description, tags)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """
+        params = (user_id, post_id, timestamp, timestamp, description,)
+        status, _ = self.execute_query(query, params)
+        if not status:
+            return None
+        response = {
+            "user_id": user_id,
+            "post_id": post_id,
+            "created_at": timestamp,
+            "updated_at": timestamp,
+            "description": description,
+        }
+        return response
+    
+    def get_comments(self, user_id, limit=100, offset=0):
+        query = """
+            SELECT postId, userId, createdAt, updatedAt, description
+            FROM Comments
+            WHERE (postId = %s)
+            ORDER BY createdAt DESC
+            LIMIT %s OFFSET %s
+        """
+        params = (user_id, limit, offset,)
+        status, response = self.execute_query(query, params)
+        if not status:
+            return None
+        comments = []
+        for comment in response:
+            comment_info = {
+                "post_id": comment[0],
+                "user_id": comment[1],
+                "created_at": comment[2],
+                "updated_at": comment[3],
+                "description": comment[4]
+            }
+            comments.append(comment_info)
+        return comments

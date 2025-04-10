@@ -11,6 +11,8 @@ service ContentService {
   rpc GetPostById(GetPostByIdRequest) returns (Post);
   rpc GetUserPosts(GetPostsRequest) returns (PostsList);
   rpc GetAllPosts(GetPostsRequest) returns (PostsList);
+  rpc AddComment(AddCommentRequest) returns (Comment);
+  rpc GetComments(GetCommentsRequest) returns (CommentsList);
 }
 
 message Post {
@@ -62,4 +64,27 @@ message PostsList {
   repeated Post posts = 1;
 }
 
+message AddCommentRequest {
+  int32 post_id = 1;
+  int32 user_id = 2;
+  string description = 3;
+}
 
+message Comment {
+  int32 post_id = 1;
+  int32 user_id = 2;
+  google.protobuf.Timestamp created_at = 3;
+  google.protobuf.Timestamp updated_at = 4;
+  string description = 5;
+}
+
+message GetCommentsRequest {
+  int32 post_id = 1;
+  int32 user_id = 2;
+  int32 limit = 3;
+  int32 offset = 4;
+}
+
+message CommentsList {
+  repeated Comment comments = 1;
+}

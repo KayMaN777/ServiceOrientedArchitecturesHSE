@@ -32,4 +32,5 @@ def serve():
     server.wait_for_termination()
 
 if __name__ == '__main__':
+    print("I AM HERE CONTENT SERVICE")
     serve()

@@ -64,6 +64,16 @@ class ContentServiceStub(object):
                 request_serializer=content__service__pb2.GetPostsRequest.SerializeToString,
                 response_deserializer=content__service__pb2.PostsList.FromString,
                 _registered_method=True)
+        self.AddComment = channel.unary_unary(
+                '/ContentService/AddComment',
+                request_serializer=content__service__pb2.AddCommentRequest.SerializeToString,
+                response_deserializer=content__service__pb2.Comment.FromString,
+                _registered_method=True)
+        self.GetComments = channel.unary_unary(
+                '/ContentService/GetComments',
+                request_serializer=content__service__pb2.GetCommentsRequest.SerializeToString,
+                response_deserializer=content__service__pb2.CommentsList.FromString,
+                _registered_method=True)
 
 
 class ContentServiceServicer(object):
@@ -105,6 +115,18 @@ class ContentServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def AddComment(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetComments(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_ContentServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -137,6 +159,16 @@ def add_ContentServiceServicer_to_server(servicer, server):
                     servicer.GetAllPosts,
                     request_deserializer=content__service__pb2.GetPostsRequest.FromString,
                     response_serializer=content__service__pb2.PostsList.SerializeToString,
+            ),
+            'AddComment': grpc.unary_unary_rpc_method_handler(
+                    servicer.AddComment,
+                    request_deserializer=content__service__pb2.AddCommentRequest.FromString,
+                    response_serializer=content__service__pb2.Comment.SerializeToString,
+            ),
+            'GetComments': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetComments,
+                    request_deserializer=content__service__pb2.GetCommentsRequest.FromString,
+                    response_serializer=content__service__pb2.CommentsList.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -301,6 +333,60 @@ class ContentService(object):
             '/ContentService/GetAllPosts',
             content__service__pb2.GetPostsRequest.SerializeToString,
             content__service__pb2.PostsList.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def AddComment(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/ContentService/AddComment',
+            content__service__pb2.AddCommentRequest.SerializeToString,
+            content__service__pb2.Comment.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetComments(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/ContentService/GetComments',
+            content__service__pb2.GetCommentsRequest.SerializeToString,
+            content__service__pb2.CommentsList.FromString,
             options,
             channel_credentials,
             insecure,

@@ -4,7 +4,7 @@ from api.proto.content_service_pb2_grpc import ContentServiceServicer
 from google.protobuf.timestamp_pb2 import Timestamp
 from datetime import datetime
 from api.proto.content_service_pb2 import (
-    Post, DeletePostResponse, PostsList
+    Post, DeletePostResponse, PostsList, Comment, CommentsList
 )
 
 def create_timestamp(current_time):
@@ -102,6 +102,11 @@ class ContentService(ContentServiceServicer):
             context.set_details('Internal error')
             context.set_code(grpc.StatusCode.INTERNAL)
             return PostsList()
+        
+        for post in posts:
+            post["created_at"] = create_timestamp(post["created_at"])
+            post["updated_at"] = create_timestamp(post["updated_at"])
+
         return PostsList(posts=posts)
 
     def GetAllPosts(self, request, context):
@@ -118,5 +123,54 @@ class ContentService(ContentServiceServicer):
             context.set_details('Internal error')
             context.set_code(grpc.StatusCode.INTERNAL)
             return PostsList()
+        
+        for post in posts:
+            post["created_at"] = create_timestamp(post["created_at"])
+            post["updated_at"] = create_timestamp(post["updated_at"])
+
         return PostsList(posts=posts)
     
+    def AddComment(self, request, context):
+        metadata = dict(context.invocation_metadata())
+        if (('user_id' not in metadata or request.user_id < 0) or
+            ('post_id' not in metadata or request.post_id < 0) or 'description' not in metadata):
+            context.set_details('Invalid arguments')
+            context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
+            return Comment()
+        
+        comment = self.db.add_comment(request.user_id, request.post_id, request.description)
+        if comment is None:
+            context.set_details('Internal error')
+            context.set_code(grpc.StatusCode.INTERNAL)
+            return Comment()
+        
+        comment_response = Comment(
+            post_id=comment["post_id"],
+            user_id=comment["user_id"],
+            created_at=create_timestamp(comment["created_at"]),
+            updated_at=create_timestamp(comment["updated_at"]),
+            description=comment["description"]
+        )
+        return comment_response
+    
+    def GetComments(self, request, context):
+        metadata = dict(context.invocation_metadata())
+        if (('user_id' not in metadata or request.user_id < 0) or
+            ('post_id' not in metadata or request.post_id < 0) or
+            ('limit' not in metadata or request.limit < 0) or 
+            ('offset' not in metadata or request.offset < 0)):
+            context.set_details('Invalid arguments')
+            context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
+            return CommentsList()
+
+        comments = self.db.get_comments(request.post_id, request.user_id, request.limit, request.offset)
+        if comments is None:
+            context.set_details('Internal error')
+            context.set_code(grpc.StatusCode.INTERNAL)
+            return CommentsList()
+        
+        for comment in comments:
+            comment["created_at"] = create_timestamp(comment["created_at"])
+            comment["updated_at"] = create_timestamp(comment["updated_at"])
+
+        return CommentsList(comments=comments)
