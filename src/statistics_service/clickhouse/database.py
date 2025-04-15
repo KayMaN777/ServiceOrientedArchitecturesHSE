@@ -83,7 +83,7 @@ class Database:
         values_format = f"({user_id}, {post_id}, '{timestamp}')"
         check_query = """
             SELECT count(*) 
-            FROM Likes 
+            FROM Views 
             WHERE userId = {user_id}
             AND postId = {post_id}
         """.format(user_id=user_id, post_id=post_id)

@@ -46,7 +46,7 @@ class StatisticsService(StatisticsServiceServicer):
             context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
             return ActionResponse()
         
-        view = self.db.add_like(request.user_id, request.post_id)
+        view = self.db.add_view(request.user_id, request.post_id)
         if view is None:
             context.set_details('Internal error')
             context.set_code(grpc.StatusCode.INTERNAL)
