@@ -3,7 +3,7 @@ from datetime import datetime
 
 class Database:
     def __init__(self, db_params):
-        print(db_params)
+        # print(db_params)
         self.pool = ChPool(
             host=db_params["host"],
             port=int(db_params["port"]),
@@ -41,12 +41,12 @@ class Database:
             with self.pool.get_client() as client:
                 client.execute(create_likes_table)
                 client.execute(create_views_table)
-            print("DATABASES CREATED")
+            # print("DATABASES CREATED")
         except Exception as e:
             raise RuntimeError(f"Ошибка при создании таблиц: {e}")
 
     def add_like(self, user_id, post_id):
-        print("ДОБАВЛЯЮ ЛАЙК")
+        # print("ДОБАВЛЯЮ ЛАЙК")
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         insert_query = """
             INSERT INTO Likes (userId, postId, updatedAt) VALUES
@@ -64,7 +64,7 @@ class Database:
                 if not rows[0][0]:
                     client.execute(insert_query + values_format)
         except Exception as e:
-            print("ПРОИЗОШЛА ОШИБКА ", e, sep = ' ')
+            # print("ПРОИЗОШЛА ОШИБКА ", e, sep = ' ')
             return None
 
         like = {
@@ -75,7 +75,7 @@ class Database:
         return like
 
     def add_view(self, user_id: int, post_id: int) -> str:
-        print("ДОБАВЛЯЮ ПРОСМОТР")
+        # print("ДОБАВЛЯЮ ПРОСМОТР")
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         insert_query = """
             INSERT INTO Views (userId, postId, updatedAt) VALUES
@@ -93,7 +93,7 @@ class Database:
                 if not rows[0][0]:
                     client.execute(insert_query + values_format)
         except Exception as e:
-            print("ПРОИЗОШЛА ОШИБКА ", e, sep = ' ')
+            # print("ПРОИЗОШЛА ОШИБКА ", e, sep = ' ')
             return None
 
         view = {

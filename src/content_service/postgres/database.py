@@ -60,18 +60,36 @@ class Database:
         }
         return response
     
-    def delete_post(self, post_id):
+    def delete_post(self, post_id, user_id):
+        check_query = """
+            SELECT 1
+            FROM Posts
+            WHERE postId = %s AND userId = %s
+        """
+        status, result = self.execute_query(check_query, (post_id, user_id))
+        if not status or not result:
+            return None
+        
         query = """
             DELETE FROM Posts
-            WHERE PostId = %s
+            WHERE postId = %s AND userId = %s
         """
-        params = (post_id,)
+        params = (post_id, user_id,)
         status, _ = self.execute_query(query, params)
         if not status:
             return None
         return status
 
-    def update_post(self, post_id, title = None, description = None, is_private = None, tags = None):
+    def update_post(self, post_id, user_id, title = None, description = None, is_private = None, tags = None):
+        check_query = """
+            SELECT 1
+            FROM Posts
+            WHERE postId = %s AND userId = %s
+        """
+        status, result = self.execute_query(check_query, (post_id, user_id))
+        if not status or not result:
+            return None
+        
         columns_to_update = []
         params = []
         response = {}
@@ -100,10 +118,11 @@ class Database:
         response["updated_at"] = timestamp
         params.append(timestamp)
         params.append(post_id)
+        params.append(user_id)
         query = """
             Update Posts
             SET {0}
-            WHERE postId = %s
+            WHERE postId = %s AND userId = %s
         """.format(", ".join(columns_to_update))
         status, _ = self.execute_query(query, params)
         

@@ -80,9 +80,12 @@ class ApiGatewayServer:
         
         @self.app.route('/post', methods=['GET', 'POST', 'PUT', 'DELETE'])
         def handle_content_request():
+            base_request_method = request.method
+            request.method = 'GET'
             profile_responce = get_profile()
             if profile_responce.status_code != HTTPStatus.OK:
                 return profile_responce
+            request.method = base_request_method
 
             match request.method:
                 case 'GET':
@@ -98,6 +101,7 @@ class ApiGatewayServer:
                     )
                     try:
                         response = self.content_stub.GetPostById(get_post_req, metadata=metadata)
+                        # print(response)
                         resp_json = {
                             "postId":response.post_id,
                             "userId":response.user_id,
@@ -109,7 +113,7 @@ class ApiGatewayServer:
                             "description":response.description
                         }
                         resp_json = json.dumps(resp_json, ensure_ascii=False)
-                        Response(resp_json, status=HTTPStatus.OK, content_type='application/json; charset=utf-8')
+                        return Response(resp_json, status=HTTPStatus.OK, content_type='application/json; charset=utf-8')
                     except grpc.RpcError as e:
                         if e.code() == grpc.StatusCode.INVALID_ARGUMENT:
                             return jsonify({
@@ -184,6 +188,7 @@ class ApiGatewayServer:
             
                     update_post_req = content_service_pb2.UpdatePostRequest(
                         post_id=req_data.get("postId", 0),
+                        user_id=req_data.get("userId", 0),
                         title=req_data.get("title", ""),
                         description=req_data.get("description", ""),
                         tags=req_data.get("tags", []),
@@ -221,14 +226,17 @@ class ApiGatewayServer:
                             }), HTTPStatus.INTERNAL_SERVER_ERROR
                 case 'DELETE':
                     req_data = request.get_json(silent=True) or {}
-                    if "postId" not in req_data:
+                    required_fields = ['postId', 'userId']
+                    missing_fields = [field for field in required_fields if field not in req_data]
+                    if missing_fields:
                         return jsonify({
-                            "error": "Bad request",
-                            "message": "Missing field: postId"
+                            "error": "Bad Request",
+                            "message": f"Missing fields: {', '.join(missing_fields)}"
                         }), HTTPStatus.BAD_REQUEST
-                    metadata = [("post_id", 'True')]
+                    metadata = [('post_id', 'True'), ('user_id', 'True')]
                     delete_post_req = content_service_pb2.DeletePostRequest(
-                        post_id=req_data["postId"]
+                        post_id=req_data["postId"],
+                        user_id=req_data["userId"]
                     )
                     try:
                         response = self.content_stub.DeletePost(delete_post_req, metadata=metadata)
@@ -366,9 +374,12 @@ class ApiGatewayServer:
 
         @self.app.route('/comments/add', methods=['POST'])
         def add_comment():
+            base_request_method = request.method
+            request.method = 'GET'
             profile_responce = get_profile()
             if profile_responce.status_code != HTTPStatus.OK:
                 return profile_responce
+            request.method = base_request_method
 
             req_data = request.get_json(silent=True) or {}
             required_fields = ['userId', 'postId', 'description']
@@ -458,9 +469,12 @@ class ApiGatewayServer:
                 
         @self.app.route('/like', methods=['POST'])
         def like_post():
+            base_request_method = request.method
+            request.method = 'GET'
             profile_responce = get_profile()
             if profile_responce.status_code != HTTPStatus.OK:
                 return profile_responce
+            request.method = base_request_method
             
             req_data = request.get_json(silent=True) or {}
             required_fields = ['userId', 'postId']
@@ -500,9 +514,12 @@ class ApiGatewayServer:
 
         @self.app.route('/view', methods=['POST'])
         def view_post():
+            base_request_method = request.method
+            request.method = 'GET'
             profile_responce = get_profile()
             if profile_responce.status_code != HTTPStatus.OK:
                 return profile_responce
+            request.method = base_request_method
             
             req_data = request.get_json(silent=True) or {}
             required_fields = ['userId', 'postId']

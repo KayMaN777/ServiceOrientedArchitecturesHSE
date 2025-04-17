@@ -38,12 +38,13 @@ class ContentService(ContentServiceServicer):
     
     def DeletePost(self, request, context):
         metadata = dict(context.invocation_metadata())
-        if 'post_id' not in metadata or request.post_id < 0:
+        if (('post_id' not in metadata or request.post_id < 0) or
+            ('user_id' not in metadata or request.user_id < 0)):
             context.set_details('Invalid arguments')
             context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
             return DeletePostResponse()
 
-        status = self.db.delete_post(request.post_id)
+        status = self.db.delete_post(request.post_id, request.user_id)
         if status is None:
             context.set_details('Internal error')
             context.set_code(grpc.StatusCode.INTERNAL)
@@ -54,7 +55,8 @@ class ContentService(ContentServiceServicer):
 
     def UpdatePost(self, request, context):
         metadata = dict(context.invocation_metadata())
-        if 'post_id' not in metadata or request.post_id < 0:
+        if (('post_id' not in metadata or request.post_id < 0) or
+            ('user_id' not in metadata or request.user_id < 0)):
             context.set_details('Invalid arguments')
             context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
             return Post()
@@ -64,7 +66,7 @@ class ContentService(ContentServiceServicer):
         is_private = request.is_private if 'is_private' in metadata else None
         tags = list(request.tags) if 'tags' in metadata else None
 
-        updated_post = self.db.update_post(request.post_id, title, description, is_private, tags)
+        updated_post = self.db.update_post(request.post_id, request.user_id, title, description, is_private, tags)
         if updated_post is None:
             context.set_details('Internal error')
             context.set_code(grpc.StatusCode.INTERNAL)
@@ -86,6 +88,9 @@ class ContentService(ContentServiceServicer):
             context.set_code(grpc.StatusCode.INTERNAL)
             return Post()
         
+        post["created_at"] = create_timestamp(post["created_at"])
+        post["updated_at"] = create_timestamp(post["updated_at"])
+        print(post)
         return Post(**post)
 
     def GetUserPosts(self, request, context):

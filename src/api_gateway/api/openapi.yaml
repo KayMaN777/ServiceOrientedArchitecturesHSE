@@ -256,6 +256,8 @@ paths:
               properties:
                 postId:
                   type: integer
+                userId:
+                  type: integer
       responses:
         '200':
           description: Profile retrieved successfully
