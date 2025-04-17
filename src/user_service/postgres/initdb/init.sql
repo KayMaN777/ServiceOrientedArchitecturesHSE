@@ -22,11 +22,3 @@ CREATE TABLE IF NOT EXISTS Sessions (
     createdAt TIMESTAMP DEFAULT NOW(),
     expiresAt TIMESTAMP
 );
-
-CREATE EXTENSION IF NOT EXISTS pg_cron;
-   
-SELECT cron.schedule(
-    'delete old tokens',
-    '*/10 * * * *',
-    $$DELETE FROM Session WHERE expiresAt < NOW();$$
-);
