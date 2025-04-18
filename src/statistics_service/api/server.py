@@ -14,8 +14,9 @@ def create_timestamp(timestamp_str: str) -> Timestamp:
     return timestamp
 
 class StatisticsService(StatisticsServiceServicer):
-    def __init__(self, db):
+    def __init__(self, db, kafka_producer):
         self.db = db
+        self.kafka_producer = kafka_producer
 
     def AddLike(self, request, context):
         metadata = dict(context.invocation_metadata())
@@ -31,6 +32,7 @@ class StatisticsService(StatisticsServiceServicer):
             context.set_code(grpc.StatusCode.INTERNAL)
             return ActionResponse()
         
+        self.kafka_producer.send_like_event(like["post_id"], like["user_id"], like["updated_at"])
         like_response = ActionResponse(
             post_id=like["post_id"],
             user_id=like["user_id"],
@@ -52,6 +54,7 @@ class StatisticsService(StatisticsServiceServicer):
             context.set_code(grpc.StatusCode.INTERNAL)
             return ActionResponse()
         
+        self.kafka_producer.send_view_event(view["post_id"], view["user_id"], view["updated_at"])
         view_response = ActionResponse(
             post_id=view["post_id"],
             user_id=view["user_id"],

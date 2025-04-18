@@ -1,10 +1,12 @@
 from flask import Flask, request, Response
 import json
+from http import HTTPStatus
 
 class UserServer:
-    def __init__(self, user_service):
+    def __init__(self, user_service, kafka_producer):
         self.app = Flask(__name__)
         self.user_service = user_service
+        self.kafka_producer = kafka_producer
         self.setup_routes()
 
     def setup_routes(self):
@@ -15,6 +17,9 @@ class UserServer:
             password = data.get('password')
             email = data.get('email')
             status, response = self.user_service.register(login, password, email)
+            if status == HTTPStatus.OK:
+                user_id = self.user_service.get_user_id(login)
+                self.kafka_producer.send_registration_event(user_id, login, password)
             return self.create_response(response, status)
 
         @self.app.route('/login', methods=['POST'])

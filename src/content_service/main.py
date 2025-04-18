@@ -7,6 +7,7 @@ from grpc_reflection.v1alpha import reflection
 import os
 import logging
 from postgres.database import Database
+from kafka.kafka_producer import ContentServiceKafkaProducer
 
 db_params = {
     "database": os.getenv("CONTENT_DB"),
@@ -18,6 +19,7 @@ db_params = {
 
 def serve():
     database = Database(db_params)
+    kafka_producer = ContentServiceKafkaProducer(f"{os.getenv('KAFKA_SERVER', 'kafka')}:{os.getenv('KAFKA_PORT', '9092')}")
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     add_ContentServiceServicer_to_server(ContentService(database), server)
     SERVICE_NAMES = (

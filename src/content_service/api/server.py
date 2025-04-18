@@ -13,8 +13,9 @@ def create_timestamp(current_time):
     return timestamp
 
 class ContentService(ContentServiceServicer):
-    def __init__(self, db):
+    def __init__(self, db, kafka_producer):
         self.db = db
+        self.kafka_producer = kafka_producer
 
     def AddPost(self, request, context):
         metadata = dict(context.invocation_metadata())
@@ -149,6 +150,13 @@ class ContentService(ContentServiceServicer):
             context.set_code(grpc.StatusCode.INTERNAL)
             return Comment()
         
+        self.kafka_producer.send_comment_event(
+            post_id=comment["post_id"],
+            user_id=comment["user_id"],
+            created_at=comment["created_at"],
+            updated_at=comment["updated_at"]
+        )
+
         comment_response = Comment(
             post_id=comment["post_id"],
             user_id=comment["user_id"],
