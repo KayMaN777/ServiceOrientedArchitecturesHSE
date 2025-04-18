@@ -6,6 +6,8 @@ import os
 import grpc
 import api.proto.content_service_pb2_grpc as content_service_pb2_grpc
 import api.proto.content_service_pb2 as content_service_pb2
+import api.proto.statistics_service_pb2_grpc as statistics_service_pb2_grpc
+import api.proto.statistics_service_pb2 as statistics_service_pb2
 from http import HTTPStatus
 from google.protobuf import json_format
 
@@ -17,6 +19,10 @@ class ApiGatewayServer:
         grpc_port = os.getenv('CONTENT_API_PORT')
         channel = grpc.insecure_channel(f'{grpc_host}:{grpc_port}')
         self.content_stub = content_service_pb2_grpc.ContentServiceStub(channel)
+        grpc_host = os.getenv('STATISTICS_API_HOST')
+        grpc_port = os.getenv('STATISTICS_API_PORT')
+        channel = grpc.insecure_channel(f'{grpc_host}:{grpc_port}')
+        self.statistics_stub = statistics_service_pb2_grpc.StatisticsServiceStub(channel)
         self.setup_routes()
     
     def setup_routes(self):
@@ -74,9 +80,12 @@ class ApiGatewayServer:
         
         @self.app.route('/post', methods=['GET', 'POST', 'PUT', 'DELETE'])
         def handle_content_request():
+            base_request_method = request.method
+            request.method = 'GET'
             profile_responce = get_profile()
             if profile_responce.status_code != HTTPStatus.OK:
                 return profile_responce
+            request.method = base_request_method
 
             match request.method:
                 case 'GET':
@@ -92,6 +101,7 @@ class ApiGatewayServer:
                     )
                     try:
                         response = self.content_stub.GetPostById(get_post_req, metadata=metadata)
+                        # print(response)
                         resp_json = {
                             "postId":response.post_id,
                             "userId":response.user_id,
@@ -103,7 +113,7 @@ class ApiGatewayServer:
                             "description":response.description
                         }
                         resp_json = json.dumps(resp_json, ensure_ascii=False)
-                        Response(resp_json, status=HTTPStatus.OK, content_type='application/json; charset=utf-8')
+                        return Response(resp_json, status=HTTPStatus.OK, content_type='application/json; charset=utf-8')
                     except grpc.RpcError as e:
                         if e.code() == grpc.StatusCode.INVALID_ARGUMENT:
                             return jsonify({
@@ -178,6 +188,7 @@ class ApiGatewayServer:
             
                     update_post_req = content_service_pb2.UpdatePostRequest(
                         post_id=req_data.get("postId", 0),
+                        user_id=req_data.get("userId", 0),
                         title=req_data.get("title", ""),
                         description=req_data.get("description", ""),
                         tags=req_data.get("tags", []),
@@ -215,14 +226,17 @@ class ApiGatewayServer:
                             }), HTTPStatus.INTERNAL_SERVER_ERROR
                 case 'DELETE':
                     req_data = request.get_json(silent=True) or {}
-                    if "postId" not in req_data:
+                    required_fields = ['postId', 'userId']
+                    missing_fields = [field for field in required_fields if field not in req_data]
+                    if missing_fields:
                         return jsonify({
-                            "error": "Bad request",
-                            "message": "Missing field: postId"
+                            "error": "Bad Request",
+                            "message": f"Missing fields: {', '.join(missing_fields)}"
                         }), HTTPStatus.BAD_REQUEST
-                    metadata = [("post_id", 'True')]
+                    metadata = [('post_id', 'True'), ('user_id', 'True')]
                     delete_post_req = content_service_pb2.DeletePostRequest(
-                        post_id=req_data["postId"]
+                        post_id=req_data["postId"],
+                        user_id=req_data["userId"]
                     )
                     try:
                         response = self.content_stub.DeletePost(delete_post_req, metadata=metadata)
@@ -357,6 +371,191 @@ class ApiGatewayServer:
                         "error": "Bad request",
                         "message": ""
                     }), HTTPStatus.BAD_REQUEST
+
+        @self.app.route('/comments/add', methods=['POST'])
+        def add_comment():
+            base_request_method = request.method
+            request.method = 'GET'
+            profile_responce = get_profile()
+            if profile_responce.status_code != HTTPStatus.OK:
+                return profile_responce
+            request.method = base_request_method
+
+            req_data = request.get_json(silent=True) or {}
+            required_fields = ['userId', 'postId', 'description']
+            missing_fields = [field for field in required_fields if field not in req_data]
+            if missing_fields:
+                return jsonify({
+                    "error": "Bad Request",
+                    "message": f"Missing fields: {', '.join(missing_fields)}"
+                }), HTTPStatus.BAD_REQUEST
+            
+            metadata = [('user_id', 'True'), ('title', 'True'), ('description', 'True')]
+            add_comment_req = content_service_pb2.AddCommentRequest(
+                user_id=req_data.get("userId", 0),
+                post_id=req_data.get("postId", 0),
+                description=req_data.get("description", "")
+            )
+            try:
+                response = self.content_stub.AddComment(add_comment_req, metadata=metadata)
+                resp_json = {
+                    "postId": response.post_id,
+                    "userId":response.user_id,
+                    "createdAt":json_format.MessageToJson(response.created_at),
+                    "updatedAt":json_format.MessageToJson(response.updated_at),
+                    "description":response.description
+                }
+                resp_json = json.dumps(resp_json, ensure_ascii=False)
+                return Response(resp_json, status=HTTPStatus.OK, content_type='application/json; charset=utf-8')
+            except grpc.RpcError as e:
+                if e.code() == grpc.StatusCode.INVALID_ARGUMENT:
+                    return jsonify({
+                        "error": "Invalid arguments",
+                        "message":""
+                    }), HTTPStatus.BAD_REQUEST
+                else:
+                    return jsonify({
+                        "error":"Internal error",
+                        "message":""
+                    }), HTTPStatus.INTERNAL_SERVER_ERROR
+
+        @self.app.route('/comments/get', methods=['GET'])
+        def get_comments():
+            profile_responce = get_profile()
+            if profile_responce.status_code != HTTPStatus.OK:
+                return profile_responce
+            
+            req_data = request.get_json(silent=True) or {}
+            required_fields = ['userId', 'postId', 'limit', 'offset']
+            missing_fields = [field for field in required_fields if field not in req_data]
+            if missing_fields:
+                return jsonify({
+                    "error": "Bad Request",
+                    "message": f"Missing fields: {', '.join(missing_fields)}"
+                }), HTTPStatus.BAD_REQUEST
+
+            metadata = [('user_id', 'True'), ('post_id', 'True'), ('limit', 'True'), ('offset', 'True')]
+            get_comments_req = content_service_pb2.GetCommentsRequest(
+                user_id=req_data.get("userId", 0),
+                post_id=req_data.get("postId", 0),
+                limit=req_data.get("limit", 0),
+                offset=req_data.get("offset", 0)
+            )
+            try:
+                response = self.content_stub.GetComments(get_comments_req, metadata=metadata)
+                comments_list = []
+                for comment in response.comments:
+                    comments_list.append({
+                        "post_id": comment.post_id,
+                        "user_id": comment.user_id,
+                        "created_at": json_format.MessageToJson(comment.created_at),
+                        "updated_at": json_format.MessageToJson(comment.updated_at),
+                        "description": comment.description
+                    })
+                resp_json = {"posts": comments_list}
+                resp_json = json.dumps(resp_json, ensure_ascii=False)
+                return Response(resp_json, status=HTTPStatus.OK, content_type='application/json; charset=utf-8')
+            except grpc.RpcError as e:
+                if e.code() == grpc.StatusCode.INVALID_ARGUMENT:
+                    return jsonify({
+                        "error": "Invalid arguments",
+                        "message":""
+                    }), HTTPStatus.BAD_REQUEST
+                else:
+                    return jsonify({
+                        "error":"Internal error",
+                        "message":""
+                    }), HTTPStatus.INTERNAL_SERVER_ERROR
+                
+        @self.app.route('/like', methods=['POST'])
+        def like_post():
+            base_request_method = request.method
+            request.method = 'GET'
+            profile_responce = get_profile()
+            if profile_responce.status_code != HTTPStatus.OK:
+                return profile_responce
+            request.method = base_request_method
+            
+            req_data = request.get_json(silent=True) or {}
+            required_fields = ['userId', 'postId']
+            missing_fields = [field for field in required_fields if field not in req_data]
+            if missing_fields:
+                return jsonify({
+                    "error": "Bad Request",
+                    "message": f"Missing fields: {', '.join(missing_fields)}"
+                }), HTTPStatus.BAD_REQUEST
+
+            metadata = [('user_id', 'True'), ('post_id', 'True')]
+            like_req = statistics_service_pb2.ActionRequest(
+                user_id=req_data.get("userId", 0),
+                post_id=req_data.get("postId", 0)
+            )
+
+            try:
+                response = self.service_stub.AddLike(like_req, metadata=metadata)
+                resp_json = {
+                    "postId": response.post_id,
+                    "userId":response.user_id,
+                    "updatedAt":json_format.MessageToJson(response.updated_at)
+                }
+                resp_json = json.dumps(resp_json, ensure_ascii=False)
+                return Response(resp_json, status=HTTPStatus.OK, content_type='application/json; charset=utf-8')
+            except grpc.RpcError as e:
+                if e.code() == grpc.StatusCode.INVALID_ARGUMENT:
+                    return jsonify({
+                        "error": "Invalid arguments",
+                        "message":""
+                    }), HTTPStatus.BAD_REQUEST
+                else:
+                    return jsonify({
+                        "error":"Internal error",
+                        "message":""
+                    }), HTTPStatus.INTERNAL_SERVER_ERROR
+
+        @self.app.route('/view', methods=['POST'])
+        def view_post():
+            base_request_method = request.method
+            request.method = 'GET'
+            profile_responce = get_profile()
+            if profile_responce.status_code != HTTPStatus.OK:
+                return profile_responce
+            request.method = base_request_method
+            
+            req_data = request.get_json(silent=True) or {}
+            required_fields = ['userId', 'postId']
+            missing_fields = [field for field in required_fields if field not in req_data]
+            if missing_fields:
+                return jsonify({
+                    "error": "Bad Request",
+                    "message": f"Missing fields: {', '.join(missing_fields)}"
+                }), HTTPStatus.BAD_REQUEST
+
+            metadata = [('user_id', 'True'), ('post_id', 'True')]
+            like_req = statistics_service_pb2.ActionRequest(
+                user_id=req_data.get("userId", 0),
+                post_id=req_data.get("postId", 0)
+            )
+
+            try:
+                response = self.service_stub.AddView(like_req, metadata=metadata)
+                resp_json = {
+                    "postId": response.post_id,
+                    "userId":response.user_id,
+                    "updatedAt":json_format.MessageToJson(response.updated_at)
+                }
+                resp_json = json.dumps(resp_json, ensure_ascii=False)
+                return Response(resp_json, status=HTTPStatus.OK, content_type='application/json; charset=utf-8')
+            except grpc.RpcError as e:
+                if e.code() == grpc.StatusCode.INVALID_ARGUMENT:
+                    return jsonify({
+                        "error": "Invalid arguments",
+                        "message":""
+                    }), HTTPStatus.BAD_REQUEST
+                else:
+                    return jsonify({
+                        "error":"Internal error",
+                        "message":""
+                    }), HTTPStatus.INTERNAL_SERVER_ERROR
 
     def run(self, host='0.0.0.0', port=5000):
         self.app.run(host=host, port=port)

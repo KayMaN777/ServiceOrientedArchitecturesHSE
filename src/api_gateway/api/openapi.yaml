@@ -256,6 +256,8 @@ paths:
               properties:
                 postId:
                   type: integer
+                userId:
+                  type: integer
       responses:
         '200':
           description: Profile retrieved successfully
@@ -328,6 +330,116 @@ paths:
           description: Unauthorized access
         '500':
           description: Internal Error
+  /comments/add:
+    post:
+      summary: Add user comment
+      description: Adding user comment to post with provided comment description
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: integer
+                postId:
+                  type: integer
+                description:
+                  type: string
+      responses:
+        '200':
+          description: '#components/responses/CommentDataResponse'
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized access
+        '500':
+          description: Internal Error   
+  /comments/get:
+    get:
+      summary: Get comments to post
+      description: Get page of comments to post
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                postId:
+                  type: Integer
+                userId:
+                  type: Integer
+                limit:
+                  type: Integer
+                offset:
+                  type: Integer
+      responses:
+        '200':
+          description: '#components/responses/CommentDataListResponse'
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized access
+        '500':
+          description: Internal Error
+  /like:
+    post:
+      summary: Like post
+      description: Like post 
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                postId:
+                  type: Integer
+                userId:
+                  type: Integer
+      responses:
+        '200': 
+          description: '#components/responses/StatisticsResponse'
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized access
+        '500':
+          description: Internal Error
+  /view:
+    post:
+      summary: View post
+      description: View post 
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                postId:
+                  type: Integer
+                userId:
+                  type: Integer
+      responses:
+        '200': 
+          description: '#components/responses/StatisticsResponse'
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized access
+        '500':
+          description: Internal Error
 components:
   schemas:
     PostData:
@@ -351,6 +463,21 @@ components:
             type: string
         title:
           type: string
+        description:
+          type: string
+    CommentData:
+      type: object
+      properties:
+        postId:
+          type: Integer
+        userId:
+          type: Integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
         description:
           type: string
   responses:
@@ -380,6 +507,34 @@ components:
             type: array
             items:
               $ref: '#/components/schemas/PostData'
+    CommentDataResponse:
+      description: Comment data
+      content:
+        application/json:
+          schema:
+            $ref: '#components/schemas/CommentData'
+    CommentDataListResponse:
+      description: List of comments
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#components/schemas/CommentData'
+    StatsticsResponse:
+      description: statistics response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              postId:
+                type: Integer
+              userId:
+                type: Integer
+              updatedAt:
+                type: string
+                format: date-time
   securitySchemes:
     BearerAuth:
       type: http

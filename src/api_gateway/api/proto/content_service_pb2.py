@@ -25,7 +25,7 @@ _sym_db = _symbol_database.Default()
 from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x15\x63ontent_service.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xce\x01\n\x04Post\x12\x0f\n\x07post_id\x18\x01 \x01(\x05\x12\x0f\n\x07user_id\x18\x02 \x01(\x05\x12.\n\ncreated_at\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12.\n\nupdated_at\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x12\n\nis_private\x18\x05 \x01(\x08\x12\x0c\n\x04tags\x18\x06 \x03(\t\x12\r\n\x05title\x18\x07 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x08 \x01(\t\"g\n\x0e\x41\x64\x64PostRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\x05\x12\r\n\x05title\x18\x02 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x03 \x01(\t\x12\x0c\n\x04tags\x18\x04 \x03(\t\x12\x12\n\nis_private\x18\x05 \x01(\x08\"$\n\x11\x44\x65letePostRequest\x12\x0f\n\x07post_id\x18\x01 \x01(\x05\"%\n\x12\x44\x65letePostResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\"j\n\x11UpdatePostRequest\x12\x0f\n\x07post_id\x18\x01 \x01(\x05\x12\r\n\x05title\x18\x02 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x03 \x01(\t\x12\x0c\n\x04tags\x18\x04 \x03(\t\x12\x12\n\nis_private\x18\x05 \x01(\x08\"%\n\x12GetPostByIdRequest\x12\x0f\n\x07post_id\x18\x01 \x01(\x05\"A\n\x0fGetPostsRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\x05\x12\r\n\x05limit\x18\x02 \x01(\x05\x12\x0e\n\x06offset\x18\x03 \x01(\x05\"!\n\tPostsList\x12\x14\n\x05posts\x18\x01 \x03(\x0b\x32\x05.Post2\x99\x02\n\x0e\x43ontentService\x12!\n\x07\x41\x64\x64Post\x12\x0f.AddPostRequest\x1a\x05.Post\x12\x35\n\nDeletePost\x12\x12.DeletePostRequest\x1a\x13.DeletePostResponse\x12\'\n\nUpdatePost\x12\x12.UpdatePostRequest\x1a\x05.Post\x12)\n\x0bGetPostById\x12\x13.GetPostByIdRequest\x1a\x05.Post\x12,\n\x0cGetUserPosts\x12\x10.GetPostsRequest\x1a\n.PostsList\x12+\n\x0bGetAllPosts\x12\x10.GetPostsRequest\x1a\n.PostsListb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x15\x63ontent_service.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xce\x01\n\x04Post\x12\x0f\n\x07post_id\x18\x01 \x01(\x05\x12\x0f\n\x07user_id\x18\x02 \x01(\x05\x12.\n\ncreated_at\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12.\n\nupdated_at\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x12\n\nis_private\x18\x05 \x01(\x08\x12\x0c\n\x04tags\x18\x06 \x03(\t\x12\r\n\x05title\x18\x07 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x08 \x01(\t\"g\n\x0e\x41\x64\x64PostRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\x05\x12\r\n\x05title\x18\x02 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x03 \x01(\t\x12\x0c\n\x04tags\x18\x04 \x03(\t\x12\x12\n\nis_private\x18\x05 \x01(\x08\"5\n\x11\x44\x65letePostRequest\x12\x0f\n\x07post_id\x18\x01 \x01(\x05\x12\x0f\n\x07user_id\x18\x02 \x01(\x05\"%\n\x12\x44\x65letePostResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\"{\n\x11UpdatePostRequest\x12\x0f\n\x07post_id\x18\x01 \x01(\x05\x12\x0f\n\x07user_id\x18\x02 \x01(\x05\x12\r\n\x05title\x18\x03 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x04 \x01(\t\x12\x0c\n\x04tags\x18\x05 \x03(\t\x12\x12\n\nis_private\x18\x06 \x01(\x08\"%\n\x12GetPostByIdRequest\x12\x0f\n\x07post_id\x18\x01 \x01(\x05\"A\n\x0fGetPostsRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\x05\x12\r\n\x05limit\x18\x02 \x01(\x05\x12\x0e\n\x06offset\x18\x03 \x01(\x05\"!\n\tPostsList\x12\x14\n\x05posts\x18\x01 \x03(\x0b\x32\x05.Post\"J\n\x11\x41\x64\x64\x43ommentRequest\x12\x0f\n\x07post_id\x18\x01 \x01(\x05\x12\x0f\n\x07user_id\x18\x02 \x01(\x05\x12\x13\n\x0b\x64\x65scription\x18\x03 \x01(\t\"\xa0\x01\n\x07\x43omment\x12\x0f\n\x07post_id\x18\x01 \x01(\x05\x12\x0f\n\x07user_id\x18\x02 \x01(\x05\x12.\n\ncreated_at\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12.\n\nupdated_at\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x13\n\x0b\x64\x65scription\x18\x05 \x01(\t\"U\n\x12GetCommentsRequest\x12\x0f\n\x07post_id\x18\x01 \x01(\x05\x12\x0f\n\x07user_id\x18\x02 \x01(\x05\x12\r\n\x05limit\x18\x03 \x01(\x05\x12\x0e\n\x06offset\x18\x04 \x01(\x05\"*\n\x0c\x43ommentsList\x12\x1a\n\x08\x63omments\x18\x01 \x03(\x0b\x32\x08.Comment2\xf8\x02\n\x0e\x43ontentService\x12!\n\x07\x41\x64\x64Post\x12\x0f.AddPostRequest\x1a\x05.Post\x12\x35\n\nDeletePost\x12\x12.DeletePostRequest\x1a\x13.DeletePostResponse\x12\'\n\nUpdatePost\x12\x12.UpdatePostRequest\x1a\x05.Post\x12)\n\x0bGetPostById\x12\x13.GetPostByIdRequest\x1a\x05.Post\x12,\n\x0cGetUserPosts\x12\x10.GetPostsRequest\x1a\n.PostsList\x12+\n\x0bGetAllPosts\x12\x10.GetPostsRequest\x1a\n.PostsList\x12*\n\nAddComment\x12\x12.AddCommentRequest\x1a\x08.Comment\x12\x31\n\x0bGetComments\x12\x13.GetCommentsRequest\x1a\r.CommentsListb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -37,17 +37,25 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_ADDPOSTREQUEST']._serialized_start=267
   _globals['_ADDPOSTREQUEST']._serialized_end=370
   _globals['_DELETEPOSTREQUEST']._serialized_start=372
-  _globals['_DELETEPOSTREQUEST']._serialized_end=408
-  _globals['_DELETEPOSTRESPONSE']._serialized_start=410
-  _globals['_DELETEPOSTRESPONSE']._serialized_end=447
-  _globals['_UPDATEPOSTREQUEST']._serialized_start=449
-  _globals['_UPDATEPOSTREQUEST']._serialized_end=555
-  _globals['_GETPOSTBYIDREQUEST']._serialized_start=557
-  _globals['_GETPOSTBYIDREQUEST']._serialized_end=594
-  _globals['_GETPOSTSREQUEST']._serialized_start=596
-  _globals['_GETPOSTSREQUEST']._serialized_end=661
-  _globals['_POSTSLIST']._serialized_start=663
-  _globals['_POSTSLIST']._serialized_end=696
-  _globals['_CONTENTSERVICE']._serialized_start=699
-  _globals['_CONTENTSERVICE']._serialized_end=980
+  _globals['_DELETEPOSTREQUEST']._serialized_end=425
+  _globals['_DELETEPOSTRESPONSE']._serialized_start=427
+  _globals['_DELETEPOSTRESPONSE']._serialized_end=464
+  _globals['_UPDATEPOSTREQUEST']._serialized_start=466
+  _globals['_UPDATEPOSTREQUEST']._serialized_end=589
+  _globals['_GETPOSTBYIDREQUEST']._serialized_start=591
+  _globals['_GETPOSTBYIDREQUEST']._serialized_end=628
+  _globals['_GETPOSTSREQUEST']._serialized_start=630
+  _globals['_GETPOSTSREQUEST']._serialized_end=695
+  _globals['_POSTSLIST']._serialized_start=697
+  _globals['_POSTSLIST']._serialized_end=730
+  _globals['_ADDCOMMENTREQUEST']._serialized_start=732
+  _globals['_ADDCOMMENTREQUEST']._serialized_end=806
+  _globals['_COMMENT']._serialized_start=809
+  _globals['_COMMENT']._serialized_end=969
+  _globals['_GETCOMMENTSREQUEST']._serialized_start=971
+  _globals['_GETCOMMENTSREQUEST']._serialized_end=1056
+  _globals['_COMMENTSLIST']._serialized_start=1058
+  _globals['_COMMENTSLIST']._serialized_end=1100
+  _globals['_CONTENTSERVICE']._serialized_start=1103
+  _globals['_CONTENTSERVICE']._serialized_end=1479
 # @@protoc_insertion_point(module_scope)

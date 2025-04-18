@@ -108,23 +108,23 @@ def test_add_post(grpc_stub, mock_db, metadata, request_data, expected_code, exp
             pytest.fail(f"Ожидался успех, а получил ошибку: {e.details()}")
 
 @pytest.mark.parametrize(
-    "metadata,post_id,db_return,expected_code,expected_details",
+    "metadata,post_id,user_id,db_return,expected_code,expected_details",
     [
         # 1) Нет post_id в метадате
-        ({}, 100, True, grpc.StatusCode.INVALID_ARGUMENT, "Invalid arguments"),
+        ({}, 100, 1, True, grpc.StatusCode.INVALID_ARGUMENT, "Invalid arguments"),
         # 2) post_id < 0
-        ({"post_id": "1"}, -10, True, grpc.StatusCode.INVALID_ARGUMENT, "Invalid arguments"),
+        ({"post_id": "1", "user_id":"1"}, -10, 1, True, grpc.StatusCode.INVALID_ARGUMENT, "Invalid arguments"),
         # 3) DB вернул None -> INTERNAL
-        ({"post_id": "1"}, 1, None, grpc.StatusCode.INTERNAL, "Internal error"),
+        ({"post_id": "1", "user_id":"1"}, 1, 1, None, grpc.StatusCode.INTERNAL, "Internal error"),
         # 4) Успешное удаление
-        ({"post_id": "1"}, 1, True, None, None),
+        ({"post_id": "1", "user_id": "1"}, 1, 1, True, None, None),
     ]
 )
-def test_delete_post(grpc_stub, mock_db, metadata, post_id, db_return, expected_code, expected_details):
+def test_delete_post(grpc_stub, mock_db, metadata, post_id, user_id, db_return, expected_code, expected_details):
     mock_db.delete_post.return_value = db_return
 
     grpc_metadata = tuple((k, v) for k, v in metadata.items())
-    request = DeletePostRequest(post_id=post_id)
+    request = DeletePostRequest(post_id=post_id, user_id=user_id)
 
     try:
         response = grpc_stub.DeletePost(request, metadata=grpc_metadata)
@@ -141,19 +141,20 @@ def test_delete_post(grpc_stub, mock_db, metadata, post_id, db_return, expected_
             pytest.fail(f"Ожидался успех, а получили ошибку: {e.details()}")
 
 @pytest.mark.parametrize(
-    "metadata,post_id,request_data,db_return,expected_code,expected_details",
+    "metadata,post_id,user_id,request_data,db_return,expected_code,expected_details",
     [
         # 1) Нет post_id
-        ({}, 100, {}, None, grpc.StatusCode.INVALID_ARGUMENT, "Invalid arguments"),
+        ({}, 100, 1, {}, None, grpc.StatusCode.INVALID_ARGUMENT, "Invalid arguments"),
         # 2) post_id < 0
-        ({"post_id": "100"}, -1, {}, None, grpc.StatusCode.INVALID_ARGUMENT, "Invalid arguments"),
+        ({"post_id": "100", "user_id":"10"}, -1, 10, {}, None, grpc.StatusCode.INVALID_ARGUMENT, "Invalid arguments"),
         # 3) DB вернул None -> INTERNAL 
-        ({"post_id": "100", "title": "upd"}, 100, {"title": "upd"}, None, grpc.StatusCode.INTERNAL, "Internal error"),
+        ({"post_id": "100", "user_id": "10", "title": "upd"}, 100, 10, {"title": "upd"}, None, grpc.StatusCode.INTERNAL, "Internal error"),
         # 4) Успешное обновление
-        ({"post_id": "100", "title": "newTitle", "description": "desc"}, 100, 
+        ({"post_id": "100", "user_id":"10", "title": "newTitle", "description": "desc"}, 100, 10,
          {"title": "newTitle", "description": "desc"}, 
          {
              "post_id": 100,
+             "user_id":10,
              "title": "newTitle",
              "description": "desc",
              "is_private": False,
@@ -163,13 +164,14 @@ def test_delete_post(grpc_stub, mock_db, metadata, post_id, db_return, expected_
          None, None),
     ]
 )
-def test_update_post(grpc_stub, mock_db, metadata, post_id, request_data, db_return, expected_code, expected_details):
+def test_update_post(grpc_stub, mock_db, metadata, post_id, user_id, request_data, db_return, expected_code, expected_details):
     mock_db.update_post.return_value = db_return
 
     grpc_metadata = tuple((k, v) for k, v in metadata.items())
 
     request = UpdatePostRequest(
         post_id=post_id,
+        user_id=user_id,
         title=request_data.get("title", ""),
         description=request_data.get("description", ""),
         tags=request_data.get("tags", []),
@@ -180,6 +182,7 @@ def test_update_post(grpc_stub, mock_db, metadata, post_id, request_data, db_ret
         response = grpc_stub.UpdatePost(request, metadata=grpc_metadata)
         if expected_code is None:
             assert response.post_id == post_id
+            assert response.user_id == user_id
             assert response.title == request_data["title"]
             assert response.description == request_data["description"]
         else:
@@ -207,6 +210,8 @@ def test_update_post(grpc_stub, mock_db, metadata, post_id, request_data, db_ret
              "user_id": 1,
              "title": "SomeTitle",
              "description": "SomeDescription",
+             "created_at": datetime.utcnow(),
+             "updated_at": datetime.utcnow(),
              "tags": ["abc"],
              "is_private": False
          },

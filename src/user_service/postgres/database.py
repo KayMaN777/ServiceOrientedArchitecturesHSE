@@ -53,8 +53,9 @@ class Database:
         query = """SELECT * from Users WHERE username = %s"""
         params = (login,)
         status, result = self.execute_query(query, params)
-        if status:
-            result = result[0][0]
+        if not status or not result:
+            return None
+        result = result[0][0]
         return result
 
     def add_token(self, login: str) -> tuple[bool, str]:

@@ -36,6 +36,8 @@ services:
     depends_on:
       user_database:
         condition: service_healthy
+      kafka-setup:
+        condition: service_started
     ports:
       - "${USER_API_PORT}:${USER_API_PORT}"
     networks:
@@ -97,6 +99,105 @@ services:
         condition: service_healthy
     ports:
       - "${CONTENT_API_PORT}:${CONTENT_API_PORT}"
+    networks:
+      - my_network
+  statistics_database:
+    image: clickhouse/clickhouse-server
+    container_name: statistics_database
+    environment:
+      CLICKHOUSE_USER: ${STATISTICS_DB_USER}
+      CLICKHOUSE_PASSWORD: ${STATISTICS_DB_PASSWORD}
+      CLICKHOUSE_DB: ${STATISTICS_DB}
+    volumes:
+      - ./statistics_service/clickhouse/initdb:/docker-entrypoint-initdb.d
+    ports:
+      - "${STATISTICS_DB_PORT}:8123"
+      - "9000:9000"
+    networks:
+      - my_network
+    healthcheck:
+      test: ["CMD-SHELL", "clickhouse-client --user ${STATISTICS_DB_USER} --password ${STATISTICS_DB_PASSWORD} --query='SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  statistics_service:
+    restart: unless-stopped
+    build:
+      context: ./statistics_service/
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    command:
+      [
+        "python3",
+        "-u",
+        "main.py"
+      ]
+    container_name: statistics_service
+    depends_on:
+      content_database:
+        condition: service_healthy
+    ports:
+      - "${STATISTICS_API_PORT}:${STATISTICS_API_PORT}"
+    networks:
+      - my_network
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.0.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - my_network
+  kafka:
+    image: confluentinc/cp-kafka:7.0.0
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    networks:
+      - my_network
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    depends_on:
+      - kafka
+    ports:
+      - "8080:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+    networks:
+      - my_network
+  kafka-setup:
+    image: confluentinc/cp-kafka:7.0.0
+    container_name: kafka-setup
+    depends_on:
+      - kafka
+    command: >
+      bash -c "
+        echo Waiting for Kafka to be ready...
+        cub kafka-ready -b kafka:9092 1 40
+        echo Creating Kafka topics...
+        kafka-topics --create --if-not-exists --bootstrap-server kafka:9092 --partitions 1 --replication-factor 1 --topic registration
+        kafka-topics --create --if-not-exists --bootstrap-server kafka:9092 --partitions 1 --replication-factor 1 --topic likes
+        kafka-topics --create --if-not-exists --bootstrap-server kafka:9092 --partitions 1 --replication-factor 1 --topic views
+        kafka-topics --create --if-not-exists --bootstrap-server kafka:9092 --partitions 1 --replication-factor 1 --topic comment
+        echo Kafka topics created.
+      "
     networks:
       - my_network
 networks:

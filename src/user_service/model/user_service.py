@@ -53,3 +53,7 @@ class UserService:
     def get_profile(self, token: str) -> tuple[int, dict]:
         status, response = self.database.get_profile(token)
         return status, response
+    
+    def get_user_id(self, login):
+        response = self.database.get_user_id(login)
+        return response

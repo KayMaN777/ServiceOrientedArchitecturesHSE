@@ -99,6 +99,7 @@ class TestDatabase(unittest.TestCase):
 
         updated_data = self.db.update_post(
             post_id=post_id,
+            user_id=1,
             title="New Title",
             description="New Description",
             tags="newtag",
@@ -114,20 +115,21 @@ class TestDatabase(unittest.TestCase):
         post = self.db.add_post(user_id=2, title="Delete Me", description="To be deleted")
         assert post is not None
         status, rows = self.db.execute_query("""
-            SELECT postId FROM Posts WHERE userId=2 ORDER BY postId DESC LIMIT 1
+            SELECT postId, userId FROM Posts WHERE userId=2 ORDER BY postId DESC LIMIT 1
         """)
         assert status is True and rows
         post_id = rows[0][0]
+        user_id = rows[0][1]
 
-        delete_status = self.db.delete_post(post_id)
+        delete_status = self.db.delete_post(post_id, user_id)
         assert delete_status is True
 
         post_after_delete = self.db.get_post(post_id)
         assert post_after_delete is None
 
     def test_delete_post_non_existent(self):
-        delete_status = self.db.delete_post(987654)
-        assert delete_status is True
+        delete_status = self.db.delete_post(987654, 1)
+        assert delete_status is None
 
     def test_get_user_posts_empty(self):
         posts = self.db.get_user_posts(user_id=1001)
